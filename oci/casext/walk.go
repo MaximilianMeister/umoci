@@ -21,6 +21,7 @@ import (
 	"reflect"
 
 	"github.com/apex/log"
+	"github.com/openSUSE/umoci/oci/cas"
 	"github.com/opencontainers/go-digest"
 	ispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"golang.org/x/net/context"
@@ -156,6 +157,11 @@ func (ws *walkState) recurse(ctx context.Context, descriptor ispec.Descriptor) e
 	// Get blob to recurse into.
 	blob, err := ws.engine.FromDescriptor(ctx, descriptor)
 	if err != nil {
+		// Ignore cases where the descriptor points to an object we don't know
+		// how to parse.
+		if err == cas.ErrUnknownType {
+			err = nil
+		}
 		return err
 	}
 	defer blob.Close()
